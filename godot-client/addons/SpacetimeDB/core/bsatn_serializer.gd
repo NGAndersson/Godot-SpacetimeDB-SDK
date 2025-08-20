@@ -100,9 +100,10 @@ func write_u128(v: NGUID) -> void:
         var default_bytes = PackedByteArray(); default_bytes.resize(U128_SIZE)
         write_bytes(default_bytes) # Write default value to avoid stopping serialization
         return
-    var v_copy := v.duplicate()
-    v_copy.reverse()
-    write_bytes(v_copy)
+    var v_copy: NGUID = v.duplicate()
+    var byte_array := v_copy.as_array()
+    byte_array.reverse()
+    write_bytes(byte_array)
 
 func write_bool(v: bool) -> void:
     #print("write_bool(%s)" % v)
