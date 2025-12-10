@@ -102,11 +102,11 @@ func read_u64_le(spb: StreamPeerBuffer) -> int:
 	if not _check_read(spb, 8): return 0
 	spb.big_endian = false
 	return spb.get_u64()
-
-func read_u128(spb: StreamPeerBuffer) -> PackedByteArray:
+	
+func read_u128(spb: StreamPeerBuffer) -> NGUID:
 	var num := read_bytes(spb, U128_SIZE)
 	num.reverse() # We receive the bytes in reverse
-	return num
+	return NGUID.new(num)
 
 func read_f32_le(spb: StreamPeerBuffer) -> float:
 	if not _check_read(spb, 4): return 0.0
