@@ -295,7 +295,11 @@ func write_option(option_value: Option, bsatn_type: String, prop: Dictionary) ->
 func write_rust_enum(rust_enum: RustEnum) -> void:
 	write_u8(rust_enum.value)
 	var options = rust_enum.get_meta("enum_options")
-	var sub_class := String(options[rust_enum.value]).to_lower()
+	# Keep the original case: the primitive-writer table matches the upper-case
+	# BSATN type names emitted by codegen (e.g. "U8"). Lower-casing here made
+	# u8/u16/u32 enum payloads miss the lookup and corrupt the wire framing. The
+	# "vec_"/"opt_" prefix checks below are lower-case in metadata and still match.
+	var sub_class := String(options[rust_enum.value])
 	var data = rust_enum.data
 
 	if sub_class.begins_with("vec"):
@@ -353,7 +357,9 @@ func write_native_arraylike(v: Variant, bsatn_type: String, prop: Dictionary) ->
 	var component_types: Array[String] = []
 	if bsatn_type.contains("[") and bsatn_type.contains("]"):
 		var inside := bsatn_type.get_slice("[", 1).get_slice("]", 0)
-		component_types = inside.split(",")
+		# String.split() returns PackedStringArray, which cannot be assigned to a
+		# typed Array[String] under strict typing — use assign().
+		component_types.assign(inside.split(","))
 	else:
 		match typeof(v):
 			TYPE_VECTOR2:
