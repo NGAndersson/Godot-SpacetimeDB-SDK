@@ -345,7 +345,7 @@ func _populate_enum_from_bytes(spb: StreamPeerBuffer, resource: Resource) -> voi
 	if has_error():
 		printerr("enum failed with error: %s" % get_last_error())
 		clear_error()
-	if data:
+	if data != null:
 		resource.data = data
 
 
