@@ -206,8 +206,8 @@ func _on_websocket_message_received(raw_bytes: PackedByteArray):
 		_packet_mutex.unlock()
 		_packet_semaphore.post()
 	else:
-		var message := _parse_packet_and_get_resource(_decompress_and_parse(raw_bytes))
-		_handle_parsed_message(message)
+		for message in _parse_packet_and_get_resources(_decompress_and_parse(raw_bytes)):
+			_handle_parsed_message(message)
 
 func _thread_loop() -> void:
 	while not _thread_should_exit:
@@ -224,13 +224,12 @@ func _thread_loop() -> void:
 		var packet_to_process: PackedByteArray = _packet_queue.pop_front()
 		_packet_mutex.unlock()
 
-		var message_resource: Resource = null
 		var payload := _decompress_and_parse(packet_to_process)
-		message_resource = _parse_packet_and_get_resource(payload)
+		var messages := _parse_packet_and_get_resources(payload)
 
-		if message_resource:
+		if not messages.is_empty():
 			_result_mutex.lock()
-			_result_queue.append(message_resource)
+			_result_queue.append_array(messages)
 			_result_mutex.unlock()
 
 func _process_results_asynchronously():
@@ -264,18 +263,12 @@ func _decompress_and_parse(raw_bytes: PackedByteArray) -> PackedByteArray:
 		2: payload = DataDecompressor.decompress_packet(payload)
 	return payload
 
-func _parse_packet_and_get_resource(bsatn_bytes: PackedByteArray) -> Resource:
-	if not _deserializer: return null
-
+func _parse_packet_and_get_resources(bsatn_bytes: PackedByteArray) -> Array[Resource]:
+	if not _deserializer: return []
 	var result := _deserializer.process_bytes_and_extract_messages(bsatn_bytes)
-	if result.is_empty(): return null
-	var message_resource: Resource = result[0]
-
 	if _deserializer.has_error():
 		printerr("SpacetimeDBClient: Failed to parse BSATN packet: ", _deserializer.get_last_error())
-		return null
-
-	return message_resource
+	return result
 
 func _handle_parsed_message(message_resource: Resource):
 	if message_resource == null:
