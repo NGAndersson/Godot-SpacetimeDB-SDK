@@ -451,6 +451,14 @@ func get_local_identity() -> PackedByteArray:
 func get_token() -> StringName:
 	return _token
 
+## Forgets the in-memory token, so the next connect reads the token file or requests a new identity.
+func clear_token() -> void:
+	_token = ""
+
+## The connection id the server sent in its identity message; empty before the first connect.
+func get_connection_id() -> PackedByteArray:
+	return _connection_id
+
 func subscribe(queries: PackedStringArray) -> SpacetimeDBSubscription:
 	if not is_connected_db():
 		printerr("SpacetimeDBClient: Cannot subscribe, not connected.")
