@@ -156,7 +156,15 @@ func connect_to_database(base_url: String, database_name: String, connection_id:
 		_connection_requested = true
 		set_process(true)
 
+## code -1 drops the socket at once, without a close handshake, and reports nothing.
 func disconnect_from_server(code: int = 1000, reason: String = "Client initiated disconnect"):
+	if code == -1:
+		if _websocket.get_ready_state() != WebSocketPeer.STATE_CLOSED:
+			_websocket.close(-1)
+		_is_connected = false
+		_connection_requested = false
+		get_tree().auto_accept_quit = true
+		return
 	if _websocket.get_ready_state() != WebSocketPeer.STATE_CLOSED and _websocket.get_ready_state() != WebSocketPeer.STATE_CLOSING:
 		_print_log("SpacetimeDBConnection: Closing connection...")
 		_websocket.close(code, reason)

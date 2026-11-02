@@ -429,15 +429,32 @@ func reconnect_db(clear_db: bool = false):
 	if _connection.is_connected_db():
 		printerr("SpacetimeDBClient: Already connected")
 	if clear_db:
+		_drop_queued_results()
 		_local_db.clear_local_db()
 	_load_token_or_request()
 
-## Also abandons a connect that has not opened yet.
-func disconnect_db(clear_db: bool = false):
+## Also abandons a connect that has not opened yet. `immediate` drops the socket without a close
+## handshake and emits nothing, so it finishes even while the tree is paused.
+func disconnect_db(clear_db: bool = false, immediate: bool = false):
 	if _connection == null or not (_connection.is_connected_db() or _connection.is_connecting()): return
 	if clear_db:
 		_local_db.clear_local_db()
-	_connection.disconnect_from_server()
+	if immediate:
+		_drop_queued_results()
+		_connection.disconnect_from_server(-1)
+	else:
+		_connection.disconnect_from_server()
+
+## Messages parsed from a connection that is gone must not reach the next one's cache.
+func _drop_queued_results() -> void:
+	if not use_threading or _result_mutex == null:
+		return
+	_packet_mutex.lock()
+	_packet_queue.clear()
+	_packet_mutex.unlock()
+	_result_mutex.lock()
+	_result_queue.clear()
+	_result_mutex.unlock()
 
 func is_connected_db() -> bool:
 	return _connection and _connection.is_connected_db()
