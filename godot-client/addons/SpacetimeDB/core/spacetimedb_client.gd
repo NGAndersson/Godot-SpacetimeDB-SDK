@@ -432,8 +432,9 @@ func reconnect_db(clear_db: bool = false):
 		_local_db.clear_local_db()
 	_load_token_or_request()
 
+## Also abandons a connect that has not opened yet.
 func disconnect_db(clear_db: bool = false):
-	if not _connection.is_connected_db(): return
+	if _connection == null or not (_connection.is_connected_db() or _connection.is_connecting()): return
 	if clear_db:
 		_local_db.clear_local_db()
 	_connection.disconnect_from_server()
@@ -454,6 +455,10 @@ func get_token() -> StringName:
 ## Forgets the in-memory token, so the next connect reads the token file or requests a new identity.
 func clear_token() -> void:
 	_token = ""
+
+## The websocket connection; null before the first connect_db.
+func get_connection() -> SpacetimeDBConnection:
+	return _connection
 
 ## The connection id the server sent in its identity message; empty before the first connect.
 func get_connection_id() -> PackedByteArray:

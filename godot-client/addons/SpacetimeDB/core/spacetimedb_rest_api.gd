@@ -18,6 +18,7 @@ signal reducer_call_failed(error_code: int, response_body: String)
 func _init(base_url: String, debug_mode: bool):
 	self._base_url = base_url
 	self._debug_mode = debug_mode
+	_http_request.timeout = 10.0 # Else a request into a silent network never ends
 	add_child(_http_request)
 	# Connect the signal ONCE
 	if not _http_request.is_connected("request_completed", Callable(self, "_on_request_completed")):

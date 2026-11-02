@@ -165,6 +165,10 @@ func disconnect_from_server(code: int = 1000, reason: String = "Client initiated
 func is_connected_db() -> bool:
 	return _is_connected
 
+## A connect has been started but the websocket is not open yet.
+func is_connecting() -> bool:
+	return _connection_requested
+
 func _process(delta: float) -> void:
 	if _websocket == null: return
 
